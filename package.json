@@ -6,7 +6,7 @@
   "scripts": {
     "build:ui": "rm -rf build && cd ../Full-Stack-Open-2022/part2/phonebook && npm run build && cp -r build ../../../Full-Stack-Open-2022-Part3",
     "deploy": "git push heroku main",
-    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push && npm run deploy",    
+    "deploy:full": "npm run build:ui && git add . && git commit -m uibuild && git push && npm run deploy",
     "logs:prod": "heroku logs --tail",
     "start": "node index.js",
     "dev": "nodemon index.js",
@@ -18,6 +18,7 @@
     "nodemon": "^2.0.16"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.18.1",
     "morgan": "^1.10.0",
     "uuid": "^8.3.2"
