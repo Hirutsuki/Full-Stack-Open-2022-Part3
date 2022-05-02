@@ -1,8 +1,10 @@
 const { v4: uuidv4 } = require('uuid')
+const cors = require('cors')
 const morgan = require('morgan')
 const express = require('express')
 const app = express()
 
+app.use(cors())
 app.use(express.static('build'))
 app.use(express.json())
 morgan.token('data', (req) => req.method === 'POST' && JSON.stringify(req.body))
@@ -50,11 +52,11 @@ app.get('/info', (request, response) => {
   )
 })
 
-app.get('/persons', (request, response) => {
+app.get('/api/persons', (request, response) => {
   response.json(persons)
 })
 
-app.get('/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response) => {
   const id = Number(request.params.id)
   const person = persons.find((person) => person.id === id)
   if (person) {
@@ -64,13 +66,13 @@ app.get('/persons/:id', (request, response) => {
   }
 })
 
-app.delete('/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response) => {
   const id = Number(request.params.id)
   persons = persons.filter((person) => person.id !== id)
   response.status(204).end()
 })
 
-app.post('/persons', (request, response) => {
+app.post('/api/persons', (request, response) => {
   const body = request.body
   if (!body.name) {
     return response.status(400).json({ error: 'name missing' })
