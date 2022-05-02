@@ -3,6 +3,7 @@ const morgan = require('morgan')
 const express = require('express')
 const app = express()
 
+app.use(express.static('build'))
 app.use(express.json())
 morgan.token('data', (req) => req.method === 'POST' && JSON.stringify(req.body))
 app.use(
