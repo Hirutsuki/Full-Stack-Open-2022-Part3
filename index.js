@@ -1,8 +1,25 @@
-const { v4: uuidv4 } = require('uuid')
 const cors = require('cors')
 const morgan = require('morgan')
+const mongoose = require('mongoose')
 const express = require('express')
 const app = express()
+
+const commandLen = process.argv.length
+if (commandLen < 3) {
+  console.log(
+    'Please provide at least the password as argument: node mongo.js <password> [name] [number]'
+  )
+  process.exit(1)
+}
+
+const url = `mongodb+srv://admin-lu:${process.argv[2]}@cluster0.ali19.mongodb.net/phonebookDB?retryWrites=true&w=majority`
+mongoose.connect(url)
+
+const personSchema = new mongoose.Schema({
+  name: String,
+  number: String,
+})
+const Person = mongoose.model('Person', personSchema)
 
 app.use(cors())
 app.use(express.static('build'))
@@ -23,28 +40,28 @@ app.use(
   )
 )
 
-let persons = [
-  {
-    id: 1,
-    name: 'Arto Hellas',
-    number: '040-123456',
-  },
-  {
-    id: 2,
-    name: 'Ada Lovelace',
-    number: '39-44-5323523',
-  },
-  {
-    id: 3,
-    name: 'Dan Abramov',
-    number: '12-43-234345',
-  },
-  {
-    id: 4,
-    name: 'Mary Poppendieck',
-    number: '39-23-6423122',
-  },
-]
+// let persons = [
+//   {
+//     id: 1,
+//     name: 'Arto Hellas',
+//     number: '040-123456',
+//   },
+//   {
+//     id: 2,
+//     name: 'Ada Lovelace',
+//     number: '39-44-5323523',
+//   },
+//   {
+//     id: 3,
+//     name: 'Dan Abramov',
+//     number: '12-43-234345',
+//   },
+//   {
+//     id: 4,
+//     name: 'Mary Poppendieck',
+//     number: '39-23-6423122',
+//   },
+// ]
 
 app.get('/info', (request, response) => {
   response.send(
@@ -53,7 +70,9 @@ app.get('/info', (request, response) => {
 })
 
 app.get('/api/persons', (request, response) => {
-  response.json(persons)
+  Person.find({}).then((persons) => {
+    response.json(persons)
+  })
 })
 
 app.get('/api/persons/:id', (request, response) => {
@@ -90,12 +109,16 @@ app.post('/api/persons', (request, response) => {
     return response.status(400).json({ error: 'name must be unique' })
   }
 
+  const guid = () => {
+    new Date().getTime() + Math.floor(Math.random() * 10)
+  }
+
   const capitalised = body.name
     .split(' ')
     .map((name) => name.slice(0, 1).toUpperCase() + name.slice(1).toLowerCase())
     .join(' ')
   const person = {
-    id: uuidv4(),
+    id: guid(),
     name: capitalised,
     number: body.number,
   }
