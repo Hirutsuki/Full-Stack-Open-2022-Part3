@@ -65,7 +65,7 @@ app.post('/api/persons', (request, response, next) => {
     } else {
       return response
         .status(400)
-        .json({ error: `${body.name} already in the phonebook` })
+        .json({ error: 'existed name' })
     }
   })
 })
