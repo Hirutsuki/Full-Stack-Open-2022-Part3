@@ -1,28 +1,18 @@
+const express = require('express')
+const app = express()
+const morgan = require('morgan')
+const cors = require('cors')
 require('dotenv').config()
+
 const Person = require('./models/person')
 
-const express = require('express')
-const cors = require('cors')
-const morgan = require('morgan')
-
-const app = express()
 app.use(cors())
 app.use(express.static('build'))
 app.use(express.json())
+
 morgan.token('data', req => req.method === 'POST' && JSON.stringify(req.body))
 app.use(
-  morgan((tokens, req, res) =>
-    [
-      tokens.method(req, res),
-      tokens.url(req, res),
-      tokens.status(req, res),
-      tokens.res(req, res, 'content-length'),
-      '-',
-      tokens['response-time'](req, res),
-      'ms',
-      tokens.data(req, res)
-    ].join(' ')
-  )
+  morgan(':method :url :status :res[content-length] - :response-time ms :data')
 )
 
 app.get('/info', (request, response) => {
@@ -42,30 +32,25 @@ app.get('/api/persons', (request, response) => {
 })
 
 app.post('/api/persons', (request, response, next) => {
-  const body = request.body
-  if (!body.name) {
+  const { name, number } = request.body
+  if (!name) {
     return response.status(400).json({ error: 'name missing' })
   }
-  if (!body.number) {
+  if (!number) {
     return response.status(400).json({ error: 'number missing' })
   }
   // instantly check backend db to see if name exist
-  Person.find({ name: body.name }).then(foundPerson => {
+  Person.find({ name }).then(foundPerson => {
     // find() returns [] when couldn't find
     if (foundPerson.length === 0) {
       // save person when no matching name found
-      const person = new Person({
-        name: body.name,
-        number: body.number
-      })
+      const person = new Person({ name, number })
       person
         .save()
         .then(savedPerson => response.json(savedPerson))
         .catch(error => next(error))
     } else {
-      return response
-        .status(400)
-        .json({ error: 'existed name' })
+      return response.status(400).json({ error: 'existed name' })
     }
   })
 })
@@ -83,15 +68,13 @@ app.get('/api/persons/:id', (request, response, next) => {
 })
 
 app.put('/api/persons/:id', (request, response, next) => {
-  const body = request.body
-  const { name, number } = { ...body }
-  const newPerson = { name, number }
+  const { name, number } = request.body
 
-  Person.findByIdAndUpdate(request.params.id, newPerson, {
-    new: true,
-    runValidators: true,
-    context: 'query'
-  })
+  Person.findByIdAndUpdate(
+    request.params.id,
+    { name, number },
+    { new: true, runValidators: true, context: 'query' }
+  )
     .then(updatedPerson => {
       // findByIdAndUpdate() returns null when couldn't find
       if (!updatedPerson) {
@@ -106,7 +89,7 @@ app.put('/api/persons/:id', (request, response, next) => {
 app.delete('/api/persons/:id', (request, response, next) => {
   // some of the remove() methods are already deprecated, delete() is more advisable
   Person.findByIdAndDelete(request.params.id)
-    .then(result => response.status(204).end())
+    .then(() => response.status(204).end())
     .catch(error => next(error))
 })
 
